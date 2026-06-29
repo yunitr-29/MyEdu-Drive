@@ -114,19 +114,20 @@ function LoginPage({ onLogin, onBack }) {
 
 // ─── MODAL TAMBAH/EDIT USER ───────────────────────────────────────────────────
 function UserModal({ mode, user, onSave, onClose }) {
-  const [form, setForm]     = useState(user || { name:'', username:'', password:'', role:'Guru' })
+  const [form, setForm]     = useState(user || { name:'', username:'', email:'', password:'', role:'Guru' })
   const [error, setError]   = useState('')
   const [showPass, setSP]   = useState(false)
   const [saving, setSaving] = useState(false)
   const set = (k,v) => { setForm(p => ({...p,[k]:v})); setError('') }
 
   const handleSave = async () => {
-    if (!form.name.trim() || !form.username.trim() || !form.password.trim()) { setError('Semua field wajib diisi.'); return }
+    if (!form.name.trim() || !form.username.trim() || !form.password.trim() || !form.email.trim()) { setError('Semua field wajib diisi.'); return }
     if (form.username.includes(' ')) { setError('Username tidak boleh mengandung spasi.'); return }
     if (form.password.length < 6) { setError('Password minimal 6 karakter.'); return }
+    if (!form.email.includes('@')) { setError('Format email tidak valid.'); return }
     setSaving(true)
     try {
-      await onSave({ ...form, email: `${form.username}@madrasahnisa.sch.id`, avatar: ROLE_AVATARS[form.role]||'👤', createdAt: form.createdAt || todayStr() })
+      await onSave({ ...form, avatar: ROLE_AVATARS[form.role]||'👤', createdAt: form.createdAt || todayStr() })
     } catch(e) { setError(e.message) }
     setSaving(false)
   }
@@ -137,18 +138,38 @@ function UserModal({ mode, user, onSave, onClose }) {
         <h2 style={{ fontSize:20, fontWeight:800, color:'#1a2e1d', margin:'0 0 20px' }}>{mode==='add' ? '➕ Tambah Akun' : '✏️ Edit Akun'}</h2>
         {error && <div style={{ background:'#fff0f0', border:'1px solid #f5c0c0', color:'#c0392b', borderRadius:8, padding:'10px 14px', fontSize:13, marginBottom:14 }}>⚠️ {error}</div>}
 
-        {[['name','Nama Lengkap','cth: Bu Ratna Dewi','text'],['username','Username','cth: ratna','text'],['password','Password','Minimal 6 karakter', showPass?'text':'password']].map(([k,lbl,ph,t]) => (
-          <div key={k} style={{ marginBottom:12 }}>
-            <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#2d3a2e', marginBottom:6 }}>{lbl}</label>
-            <div style={{ position:'relative' }}>
-              <input style={{ width:'100%', padding:'11px 12px', border:'1.5px solid #dde8dd', borderRadius:8, fontSize:14, outline:'none', boxSizing:'border-box', paddingRight: k==='password'?44:12 }}
-                type={t} placeholder={ph} value={form[k]}
-                onChange={e => set(k, k==='username' ? e.target.value.toLowerCase().replace(/\s/g,'') : e.target.value)} />
-              {k==='password' && <button type="button" onClick={()=>setSP(!showPass)} style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', fontSize:15 }}>{showPass?'🙈':'👁️'}</button>}
-            </div>
-            {k==='username' && form.username && <p style={{ fontSize:11, color:'#888', margin:'4px 0 0' }}>Email: {form.username}@madrasahnisa.sch.id</p>}
+        {/* Nama Lengkap */}
+        <div style={{ marginBottom:12 }}>
+          <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#2d3a2e', marginBottom:6 }}>Nama Lengkap</label>
+          <input style={{ width:'100%', padding:'11px 12px', border:'1.5px solid #dde8dd', borderRadius:8, fontSize:14, outline:'none', boxSizing:'border-box' }}
+            type="text" placeholder="cth: Bu Ratna Dewi" value={form.name} onChange={e => set('name', e.target.value)} />
+        </div>
+
+        {/* Username */}
+        <div style={{ marginBottom:12 }}>
+          <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#2d3a2e', marginBottom:6 }}>Username</label>
+          <input style={{ width:'100%', padding:'11px 12px', border:'1.5px solid #dde8dd', borderRadius:8, fontSize:14, outline:'none', boxSizing:'border-box' }}
+            type="text" placeholder="cth: ratna (tanpa spasi)" value={form.username} onChange={e => set('username', e.target.value.toLowerCase().replace(/\s/g,''))} />
+          <p style={{ fontSize:11, color:'#888', margin:'4px 0 0' }}>Digunakan untuk login ke aplikasi</p>
+        </div>
+
+        {/* Email */}
+        <div style={{ marginBottom:12 }}>
+          <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#2d3a2e', marginBottom:6 }}>Email Gmail</label>
+          <input style={{ width:'100%', padding:'11px 12px', border:'1.5px solid #dde8dd', borderRadius:8, fontSize:14, outline:'none', boxSizing:'border-box' }}
+            type="email" placeholder="cth: ratna@gmail.com" value={form.email||''} onChange={e => set('email', e.target.value.trim())} />
+          <p style={{ fontSize:11, color:'#888', margin:'4px 0 0' }}>Gunakan Gmail masing-masing guru/TU</p>
+        </div>
+
+        {/* Password */}
+        <div style={{ marginBottom:12 }}>
+          <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#2d3a2e', marginBottom:6 }}>Password</label>
+          <div style={{ position:'relative' }}>
+            <input style={{ width:'100%', padding:'11px 44px 11px 12px', border:'1.5px solid #dde8dd', borderRadius:8, fontSize:14, outline:'none', boxSizing:'border-box' }}
+              type={showPass?'text':'password'} placeholder="Minimal 6 karakter" value={form.password} onChange={e => set('password', e.target.value)} />
+            <button type="button" onClick={()=>setSP(!showPass)} style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', fontSize:15 }}>{showPass?'🙈':'👁️'}</button>
           </div>
-        ))}
+        </div>
 
         <div style={{ marginBottom:20 }}>
           <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#2d3a2e', marginBottom:8 }}>Role</label>
@@ -299,16 +320,6 @@ function AdminPanel({ onBack, showToast }) {
   )
 }
 
-// ─── HELPERS TAMBAHAN ─────────────────────────────────────────────────────────
-const getExt   = (n) => n?.split('.').pop()?.toLowerCase() || ''
-const isImage  = (n) => ['jpg','jpeg','png','gif','webp','bmp','svg'].includes(getExt(n))
-const isPdf    = (n) => getExt(n) === 'pdf'
-const isVideo  = (n) => ['mp4','webm','ogg','mov'].includes(getExt(n))
-const isAudio  = (n) => ['mp3','wav','ogg','m4a'].includes(getExt(n))
-const isOffice = (n) => ['doc','docx','xls','xlsx','ppt','pptx'].includes(getExt(n))
-const baseName = (n) => n?.split('/').pop() || n
-const rootFolder = (n) => { const p = n?.split('/'); return p?.length > 1 ? p[0] : null }
-
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [page,        setPage]        = useState('loading')
@@ -322,13 +333,9 @@ export default function App() {
   const [uploadCat,   setUploadCat]   = useState('administrasi')
   const [toast,       setToast]       = useState(null)
   const [delConfirm,  setDelConfirm]  = useState(null)
-  const [viewMode,    setViewMode]    = useState('grid')
+  const [viewMode,    setViewMode]    = useState('list')
   const [userMenu,    setUserMenu]    = useState(false)
-  const [openFolder,  setOpenFolder]  = useState(null)
-  const [preview,     setPreview]     = useState(null)
-  const [previewLoad, setPreviewLoad] = useState(false)
-  const fileRef   = useRef()
-  const folderRef = useRef()
+  const fileRef = useRef()
 
   const showToast = useCallback((msg, type='success') => {
     setToast({msg,type}); setTimeout(()=>setToast(null),3000)
@@ -376,33 +383,6 @@ export default function App() {
     setUploadModal(false); await fetchFiles()
   }, [uploadCat, currentUser, fetchFiles, showToast])
 
-  const uploadFolder = useCallback(async (incoming) => {
-    const fileList = Array.from(incoming)
-    if (fileList.length === 0) return
-    const folderName = fileList[0].webkitRelativePath.split('/')[0]
-    const category = uploadCat
-    let count = 0
-    showToast(`Mengunggah folder "${folderName}" (${fileList.length} file)...`, 'info')
-    for (const file of fileList) {
-      const relativePath = file.webkitRelativePath          // "FolderA/sub/file.pdf"
-      const safe = relativePath.replace(/[^a-zA-Z0-9._\-/]/g, '_')
-      const path = `${category}/folders/${Date.now()}_${safe}`
-      const { error: upErr } = await supabase.storage.from('documents').upload(path, file)
-      if (upErr) { showToast('Gagal upload: ' + upErr.message, 'info'); continue }
-      await supabase.from('files').insert({
-        name: relativePath,          // tampilkan path relatif agar user tahu struktur
-        category,
-        size: file.size,
-        storage_path: path,
-        uploaded_by: currentUser?.id,
-        uploader_name: currentUser?.name,
-      })
-      count++
-    }
-    if (count > 0) showToast(`Folder "${folderName}": ${count} file berhasil diunggah!`)
-    setUploadModal(false); await fetchFiles()
-  }, [uploadCat, currentUser, fetchFiles, showToast])
-
   const downloadFile = async (file) => {
     const { data, error } = await supabase.storage.from('documents').download(file.storage_path)
     if (error) { showToast('Gagal mengunduh file.','info'); return }
@@ -418,55 +398,9 @@ export default function App() {
     setDelConfirm(null); showToast('File dihapus.','info'); await fetchFiles()
   }
 
-  // Buka preview file
-  const openPreview = useCallback(async (file) => {
-    setPreviewLoad(true); setPreview({ file, url: null, type: null })
-    const { data, error } = await supabase.storage.from('documents').download(file.storage_path)
-    if (error) { showToast('Gagal membuka preview.','info'); setPreview(null); setPreviewLoad(false); return }
-    const url  = URL.createObjectURL(data)
-    const name = baseName(file.name)
-    const type = isImage(name) ? 'image' : isPdf(name) ? 'pdf' : isVideo(name) ? 'video' : isAudio(name) ? 'audio' : isOffice(name) ? 'office' : 'other'
-    setPreview({ file, url, type })
-    setPreviewLoad(false)
-  }, [showToast])
-
-  const closePreview = useCallback(() => {
-    if (preview?.url) URL.revokeObjectURL(preview.url)
-    setPreview(null)
-  }, [preview])
-
-  // Hitung struktur folder & file flat
-  const catFiles   = files.filter(f => (activeCat==='all'||f.category===activeCat))
-  const searchLow  = search.toLowerCase()
-
-  // Jika sedang search, tampilkan semua file flat
-  // Jika tidak search: pisahkan folder dan file root
-  const folderMap  = {}   // folderName -> [file, ...]
-  const rootFiles  = []   // file tanpa folder
-  catFiles.forEach(f => {
-    const folder = rootFolder(f.name)
-    if (folder) { if (!folderMap[folder]) folderMap[folder] = []; folderMap[folder].push(f) }
-    else rootFiles.push(f)
-  })
-  const folderNames = Object.keys(folderMap).sort()
-
-  // File yang tampil di dalam folder terbuka (atau semua jika search)
-  const filteredInFolder = openFolder
-    ? (folderMap[openFolder]||[]).filter(f => baseName(f.name).toLowerCase().includes(searchLow))
-    : []
-
-  // Item di root: folder-folder + file root, difilter search
-  const visibleFolders = search
-    ? []
-    : folderNames.filter(fn => fn.toLowerCase().includes(searchLow) || folderMap[fn].some(f=>baseName(f.name).toLowerCase().includes(searchLow)))
-  const visibleRootFiles = search
-    ? catFiles.filter(f => f.name.toLowerCase().includes(searchLow))
-    : rootFiles.filter(f => f.name.toLowerCase().includes(searchLow))
-
-  const filtered   = openFolder ? filteredInFolder : [...visibleRootFiles]
-  const totalItems = openFolder ? filteredInFolder.length : (visibleFolders.length + visibleRootFiles.length)
-  const totalSize  = files.reduce((a,f)=>a+f.size,0)
-  const catCount   = (id) => files.filter(f=>f.category===id).length
+  const filtered = files.filter(f => (activeCat==='all'||f.category===activeCat) && f.name.toLowerCase().includes(search.toLowerCase()))
+  const totalSize = files.reduce((a,f)=>a+f.size,0)
+  const catCount  = (id) => files.filter(f=>f.category===id).length
 
   // Loading screen
   if (page==='loading') return (
@@ -547,7 +481,6 @@ export default function App() {
           {currentUser?.role==='Admin' && (
             <button onClick={()=>setPage('admin')} style={{ background:'transparent', border:'1px solid #a8d5b5', color:'#a8d5b5', padding:'8px 16px', borderRadius:6, cursor:'pointer', fontSize:13, fontWeight:500 }}>👥 Kelola Pengguna</button>
           )}
-          <button onClick={()=>folderRef.current.click()} style={{ background:'transparent', border:'1px solid #e8a020', color:'#e8a020', padding:'10px 16px', borderRadius:8, fontWeight:600, cursor:'pointer', fontSize:14 }}>📁 Unggah Folder</button>
           <button onClick={()=>setUploadModal(true)} style={{ background:'#e8a020', color:'#fff', border:'none', padding:'10px 20px', borderRadius:8, fontWeight:600, cursor:'pointer', fontSize:14 }}>⬆️ Unggah File</button>
         </div>
         <div style={{ position:'relative' }}>
@@ -581,7 +514,7 @@ export default function App() {
         <aside style={{ width:240, minWidth:200, background:'#f4f7f4', borderRight:'1px solid #dde8dd', padding:'20px 12px', display:'flex', flexDirection:'column', gap:4 }}>
           <p style={{ fontSize:11, fontWeight:700, color:'#888', letterSpacing:'0.12em', textTransform:'uppercase', padding:'0 8px', margin:'0 0 8px' }}>Kategori</p>
           {[{id:'all',label:'Semua Dokumen',icon:'🗂️'},...CATEGORIES].map(cat => (
-            <button key={cat.id} onClick={()=>{ setActiveCat(cat.id); setOpenFolder(null) }}
+            <button key={cat.id} onClick={()=>setActiveCat(cat.id)}
               style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:8, border:'none', cursor:'pointer', fontSize:13, width:'100%', background:activeCat===cat.id?'#2d5a3d':'transparent', color:activeCat===cat.id?'#fff':'#2d3a2e', fontWeight:activeCat===cat.id?600:400 }}>
               <span>{cat.icon}</span>
               <span style={{ flex:1, textAlign:'left' }}>{cat.label}</span>
@@ -599,11 +532,9 @@ export default function App() {
 
         {/* Main */}
         <main style={{ flex:1, padding:24, overflowY:'auto', background:'#fafcfa' }}>
-
-          {/* Search + view toggle */}
           <div style={{ display:'flex', gap:12, marginBottom:16 }}>
             <input style={{ flex:1, padding:'10px 16px', border:'1px solid #dde8dd', borderRadius:8, fontSize:14, background:'#fff', outline:'none' }}
-              placeholder="🔍  Cari dokumen..." value={search} onChange={e=>{ setSearch(e.target.value); setOpenFolder(null) }} />
+              placeholder="🔍  Cari dokumen..." value={search} onChange={e=>setSearch(e.target.value)} />
             <div style={{ display:'flex', gap:4 }}>
               {['list','grid'].map(m => (
                 <button key={m} onClick={()=>setViewMode(m)} style={{ width:38, height:38, border:'none', borderRadius:6, cursor:'pointer', fontSize:16, background:viewMode===m?'#2d5a3d':'#e8ede8', color:viewMode===m?'#fff':'#333' }}>
@@ -618,195 +549,64 @@ export default function App() {
             onDrop={e=>{e.preventDefault();setIsDragging(false);if(e.dataTransfer.files.length)uploadFiles(e.dataTransfer.files)}}
             style={{ border:`2px dashed ${isDragging?'#2d7a3a':'#c5d4c5'}`, borderRadius:10, padding:18, textAlign:'center', cursor:'pointer', marginBottom:16, background:isDragging?'#e8f4e8':'#f9fbf9', transition:'all .2s' }}>
             <span style={{ fontSize:28 }}>☁️</span>
-            <p style={{ margin:'6px 0 4px', color:'#4a7c59', fontWeight:500, fontSize:14 }}>{isDragging?'Lepaskan untuk mengunggah...':'Seret & lepas file ke sini, atau klik untuk memilih'}</p>
-            <div style={{ display:'flex', gap:8, justifyContent:'center', marginTop:8 }}>
-              <span onClick={e=>{e.stopPropagation();fileRef.current.click()}} style={{ fontSize:12, color:'#4a7c59', fontWeight:600, textDecoration:'underline', cursor:'pointer' }}>📄 Pilih File</span>
-              <span style={{ fontSize:12, color:'#aaa' }}>·</span>
-              <span onClick={e=>{e.stopPropagation();folderRef.current.click()}} style={{ fontSize:12, color:'#4a7c59', fontWeight:600, textDecoration:'underline', cursor:'pointer' }}>📁 Pilih Folder</span>
-            </div>
+            <p style={{ margin:'6px 0 0', color:'#4a7c59', fontWeight:500, fontSize:14 }}>{isDragging?'Lepaskan untuk mengunggah...':'Seret & lepas file ke sini, atau klik untuk memilih'}</p>
           </div>
           <input ref={fileRef} type="file" multiple style={{ display:'none' }} onChange={e=>uploadFiles(e.target.files)} />
-          <input ref={folderRef} type="file" webkitdirectory="" multiple style={{ display:'none' }} onChange={e=>{ if(e.target.files.length>0) uploadFolder(e.target.files); e.target.value='' }} />
 
-          {/* Breadcrumb */}
-          <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:12, fontSize:13 }}>
-            <button onClick={()=>setOpenFolder(null)} style={{ background:'none', border:'none', cursor:'pointer', color: openFolder?'#4a7c59':'#1a2e1d', fontWeight:600, padding:0, fontSize:13 }}>
-              {activeCat==='all' ? '🗂️ Semua Dokumen' : CATEGORIES.find(c=>c.id===activeCat)?.icon+' '+CATEGORIES.find(c=>c.id===activeCat)?.label}
-            </button>
-            {openFolder && <>
-              <span style={{ color:'#aaa' }}>›</span>
-              <span style={{ color:'#1a2e1d', fontWeight:700 }}>📁 {openFolder}</span>
-            </>}
-            <span style={{ marginLeft:'auto', color:'#888', fontSize:12 }}>{totalItems} item</span>
-          </div>
+          <p style={{ fontSize:13, color:'#888', marginBottom:12 }}>{filtered.length} dokumen{activeCat!=='all'&&` · ${CATEGORIES.find(c=>c.id===activeCat)?.label}`}{search&&` · "${search}"`}</p>
 
-          {/* Konten */}
-          {filesLoading ? (
-            <div style={{ textAlign:'center', padding:48, color:'#aaa' }}>⏳ Memuat dokumen...</div>
-          ) : totalItems === 0 && !openFolder ? (
+          {filesLoading ? <div style={{ textAlign:'center', padding:48, color:'#aaa' }}>⏳ Memuat dokumen...</div>
+          : filtered.length===0 ? (
             <div style={{ display:'flex', flexDirection:'column', alignItems:'center', padding:'60px 20px' }}>
               <span style={{ fontSize:48 }}>📂</span>
               <p style={{ color:'#777', marginTop:12 }}>Belum ada dokumen. Unggah file pertama Anda!</p>
               <button onClick={()=>setUploadModal(true)} style={{ background:'#e8a020', color:'#fff', border:'none', padding:'10px 20px', borderRadius:8, fontWeight:600, cursor:'pointer', fontSize:14, marginTop:12 }}>⬆️ Unggah Sekarang</button>
             </div>
-          ) : viewMode === 'grid' ? (
-            // ── GRID VIEW ──
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))', gap:16 }}>
-              {/* Folder cards */}
-              {!openFolder && visibleFolders.map(fn => {
-                const cat = CATEGORIES.find(c=>c.id===(folderMap[fn][0]?.category))
-                const fCount = folderMap[fn].length
-                const fSize = folderMap[fn].reduce((a,f)=>a+f.size,0)
-                return (
-                  <div key={fn} onDoubleClick={()=>setOpenFolder(fn)}
-                    style={{ background:'#fff', borderRadius:12, border:'1px solid #e0e8e0', padding:16, display:'flex', flexDirection:'column', alignItems:'center', gap:8, cursor:'pointer', transition:'box-shadow .15s' }}
-                    onMouseEnter={e=>e.currentTarget.style.boxShadow='0 4px 16px rgba(0,0,0,0.1)'}
-                    onMouseLeave={e=>e.currentTarget.style.boxShadow='none'}>
-                    <div style={{ fontSize:52, lineHeight:1 }}>📁</div>
-                    <p style={{ fontSize:13, fontWeight:700, color:'#1a2e1d', textAlign:'center', wordBreak:'break-word', margin:0 }}>{fn}</p>
-                    <p style={{ fontSize:11, color:'#888', margin:0 }}>{fCount} file · {fmtBytes(fSize)}</p>
-                    {cat && <span style={{ fontSize:10, fontWeight:600, padding:'2px 7px', borderRadius:6, background:cat.color+'22', color:cat.color }}>{cat.icon} {cat.label}</span>}
-                    <button onClick={e=>{e.stopPropagation();setOpenFolder(fn)}} style={{ width:'100%', background:'#f0f5f0', border:'none', borderRadius:6, padding:'7px', cursor:'pointer', fontSize:12, fontWeight:600, color:'#2d5a3d', marginTop:4 }}>📂 Buka Folder</button>
-                  </div>
-                )
-              })}
-              {/* File cards */}
-              {(openFolder ? filteredInFolder : visibleRootFiles).map(f => {
-                const cat  = CATEGORIES.find(c=>c.id===f.category)
-                const name = baseName(f.name)
-                return (
-                  <div key={f.id}
-                    style={{ background:'#fff', borderRadius:12, border:'1px solid #e0e8e0', padding:16, display:'flex', flexDirection:'column', alignItems:'center', gap:6, cursor:'pointer', transition:'box-shadow .15s' }}
-                    onMouseEnter={e=>e.currentTarget.style.boxShadow='0 4px 16px rgba(0,0,0,0.1)'}
-                    onMouseLeave={e=>e.currentTarget.style.boxShadow='none'}
-                    onDoubleClick={()=>openPreview(f)}>
-                    <div style={{ width:'100%', borderRadius:8, padding:'18px 8px', textAlign:'center', background:cat?.color+'18', minHeight:64, display:'flex', alignItems:'center', justifyContent:'center' }}>
-                      <span style={{ fontSize:38 }}>{fileIcon(name)}</span>
-                    </div>
-                    <p style={{ fontSize:12, fontWeight:600, color:'#1a2e1d', textAlign:'center', wordBreak:'break-all', margin:0, lineHeight:1.4 }}>{name}</p>
-                    <p style={{ fontSize:11, color:'#888', margin:0 }}>{fmtBytes(f.size)}</p>
-                    <div style={{ display:'flex', gap:4, width:'100%', marginTop:4 }}>
-                      <button onClick={()=>openPreview(f)} style={{ flex:1, background:'#2d5a3d', color:'#fff', border:'none', borderRadius:6, padding:'7px', cursor:'pointer', fontSize:11, fontWeight:600 }}>👁️ Lihat</button>
-                      <button onClick={()=>downloadFile(f)} style={{ flex:1, background:'#f0f5f0', border:'none', borderRadius:6, padding:'7px', cursor:'pointer', fontSize:11 }}>⬇️</button>
-                      <button onClick={()=>setDelConfirm(f)} style={{ background:'#fff0f0', border:'none', borderRadius:6, padding:'7px 9px', cursor:'pointer', fontSize:11 }}>🗑️</button>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          ) : (
-            // ── LIST VIEW ──
+          ) : viewMode==='list' ? (
             <div style={{ background:'#fff', borderRadius:12, border:'1px solid #e0e8e0', overflow:'hidden' }}>
               <div style={{ display:'flex', alignItems:'center', padding:'12px 16px', background:'#f0f5f0', borderBottom:'1px solid #e0e8e0', fontSize:12, fontWeight:700, color:'#888', textTransform:'uppercase', letterSpacing:'0.06em' }}>
-                <span style={{ flex:3 }}>Nama</span><span style={{ flex:1.5 }}>Kategori</span><span style={{ flex:1 }}>Ukuran</span><span style={{ flex:1 }}>Tanggal</span><span style={{ flex:1, textAlign:'right' }}>Aksi</span>
+                <span style={{ flex:3 }}>Nama File</span><span style={{ flex:1.5 }}>Kategori</span><span style={{ flex:1 }}>Ukuran</span><span style={{ flex:1 }}>Tanggal</span><span style={{ flex:1, textAlign:'right' }}>Aksi</span>
               </div>
-              {/* Folder rows */}
-              {!openFolder && visibleFolders.map(fn => {
-                const fCount = folderMap[fn].length
-                const fSize  = folderMap[fn].reduce((a,f)=>a+f.size,0)
-                const cat    = CATEGORIES.find(c=>c.id===(folderMap[fn][0]?.category))
+              {filtered.map(f => {
+                const cat = CATEGORIES.find(c=>c.id===f.category)
                 return (
-                  <div key={fn} onDoubleClick={()=>setOpenFolder(fn)}
-                    style={{ display:'flex', alignItems:'center', padding:'13px 16px', borderBottom:'1px solid #f0f5f0', cursor:'pointer', background:'#fffdf5' }}
-                    onMouseEnter={e=>e.currentTarget.style.background='#fff8e8'}
-                    onMouseLeave={e=>e.currentTarget.style.background='#fffdf5'}>
+                  <div key={f.id} style={{ display:'flex', alignItems:'center', padding:'14px 16px', borderBottom:'1px solid #f0f5f0' }}>
                     <span style={{ flex:3, display:'flex', alignItems:'center', gap:8, minWidth:0 }}>
-                      <span style={{ fontSize:20 }}>📁</span>
-                      <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontSize:14, fontWeight:600, color:'#1a2e1d' }}>{fn}</span>
-                      <span style={{ fontSize:11, color:'#aaa', flexShrink:0 }}>{fCount} file</span>
+                      <span style={{ fontSize:20 }}>{fileIcon(f.name)}</span>
+                      <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontSize:14, fontWeight:500, color:'#1a2e1d' }}>{f.name}</span>
                     </span>
-                    <span style={{ flex:1.5 }}>{cat && <span style={{ fontSize:12, fontWeight:600, padding:'3px 8px', borderRadius:6, background:cat.color+'22', color:cat.color }}>{cat.icon} {cat.label}</span>}</span>
-                    <span style={{ flex:1, color:'#666', fontSize:13 }}>{fmtBytes(fSize)}</span>
-                    <span style={{ flex:1, color:'#aaa', fontSize:13 }}>—</span>
-                    <span style={{ flex:1, display:'flex', justifyContent:'flex-end' }}>
-                      <button onClick={e=>{e.stopPropagation();setOpenFolder(fn)}} style={{ background:'#f0f5f0', border:'none', borderRadius:6, padding:'7px 12px', cursor:'pointer', fontSize:12, fontWeight:600, color:'#2d5a3d' }}>📂 Buka</button>
-                    </span>
-                  </div>
-                )
-              })}
-              {/* File rows */}
-              {(openFolder ? filteredInFolder : visibleRootFiles).map(f => {
-                const cat  = CATEGORIES.find(c=>c.id===f.category)
-                const name = baseName(f.name)
-                return (
-                  <div key={f.id} style={{ display:'flex', alignItems:'center', padding:'13px 16px', borderBottom:'1px solid #f0f5f0' }}>
-                    <span style={{ flex:3, display:'flex', alignItems:'center', gap:8, minWidth:0 }}>
-                      <span style={{ fontSize:20 }}>{fileIcon(name)}</span>
-                      <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontSize:14, fontWeight:500, color:'#1a2e1d' }}>{name}</span>
-                    </span>
-                    <span style={{ flex:1.5 }}>{cat && <span style={{ fontSize:12, fontWeight:600, padding:'3px 8px', borderRadius:6, background:cat.color+'22', color:cat.color, border:`1px solid ${cat.color}44`, display:'inline-flex', alignItems:'center', gap:4 }}>{cat.icon} {cat.label}</span>}</span>
+                    <span style={{ flex:1.5 }}><span style={{ fontSize:12, fontWeight:600, padding:'3px 8px', borderRadius:6, background:cat?.color+'22', color:cat?.color, border:`1px solid ${cat?.color}44`, display:'inline-flex', alignItems:'center', gap:4 }}>{cat?.icon} {cat?.label}</span></span>
                     <span style={{ flex:1, color:'#666', fontSize:13 }}>{fmtBytes(f.size)}</span>
                     <span style={{ flex:1, color:'#666', fontSize:13 }}>{fmtDate(f.created_at)}</span>
                     <span style={{ flex:1, display:'flex', justifyContent:'flex-end', gap:6 }}>
-                      <button onClick={()=>openPreview(f)} style={{ background:'#2d5a3d', color:'#fff', border:'none', borderRadius:6, padding:'7px 10px', cursor:'pointer', fontSize:13 }}>👁️</button>
                       <button onClick={()=>downloadFile(f)} style={{ background:'#f0f5f0', border:'none', borderRadius:6, padding:'7px 10px', cursor:'pointer', fontSize:14 }}>⬇️</button>
                       <button onClick={()=>setDelConfirm(f)} style={{ background:'#fff0f0', border:'none', borderRadius:6, padding:'7px 10px', cursor:'pointer', fontSize:14 }}>🗑️</button>
                     </span>
                   </div>
                 )
               })}
-              {totalItems === 0 && openFolder && (
-                <div style={{ padding:'40px', textAlign:'center', color:'#aaa' }}>Folder kosong.</div>
-              )}
+            </div>
+          ) : (
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))', gap:16 }}>
+              {filtered.map(f => {
+                const cat = CATEGORIES.find(c=>c.id===f.category)
+                return (
+                  <div key={f.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #e0e8e0', padding:16, display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+                    <div style={{ width:'100%', borderRadius:8, padding:20, textAlign:'center', background:cat?.color+'18' }}><span style={{ fontSize:36 }}>{fileIcon(f.name)}</span></div>
+                    <p style={{ fontSize:13, fontWeight:600, color:'#1a2e1d', textAlign:'center', wordBreak:'break-all', margin:0 }}>{f.name}</p>
+                    <p style={{ fontSize:12, color:'#888', margin:0 }}>{fmtBytes(f.size)} · {fmtDate(f.created_at)}</p>
+                    <span style={{ fontSize:11, fontWeight:600, padding:'3px 8px', borderRadius:6, background:cat?.color+'22', color:cat?.color, border:`1px solid ${cat?.color}44`, marginBottom:6 }}>{cat?.icon} {cat?.label}</span>
+                    <div style={{ display:'flex', gap:6, width:'100%' }}>
+                      <button onClick={()=>downloadFile(f)} style={{ flex:1, background:'#f0f5f0', border:'none', borderRadius:6, padding:'8px', cursor:'pointer', fontSize:13 }}>⬇️ Unduh</button>
+                      <button onClick={()=>setDelConfirm(f)} style={{ background:'#fff0f0', border:'none', borderRadius:6, padding:'8px 10px', cursor:'pointer', fontSize:13 }}>🗑️</button>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           )}
         </main>
       </div>
-
-      {/* ── MODAL PREVIEW ── */}
-      {preview && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', display:'flex', flexDirection:'column', zIndex:2000 }} onClick={closePreview}>
-          {/* Header preview */}
-          <div style={{ display:'flex', alignItems:'center', padding:'12px 20px', background:'rgba(0,0,0,0.6)', gap:12 }} onClick={e=>e.stopPropagation()}>
-            <span style={{ fontSize:22 }}>{fileIcon(baseName(preview.file.name))}</span>
-            <div style={{ flex:1, minWidth:0 }}>
-              <p style={{ margin:0, color:'#fff', fontWeight:700, fontSize:15, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{baseName(preview.file.name)}</p>
-              <p style={{ margin:0, color:'#aaa', fontSize:12 }}>{fmtBytes(preview.file.size)} · {fmtDate(preview.file.created_at)}</p>
-            </div>
-            <button onClick={()=>downloadFile(preview.file)} style={{ background:'#e8a020', color:'#fff', border:'none', padding:'8px 16px', borderRadius:8, fontWeight:600, cursor:'pointer', fontSize:13 }}>⬇️ Unduh</button>
-            <button onClick={closePreview} style={{ background:'rgba(255,255,255,0.1)', color:'#fff', border:'none', padding:'8px 14px', borderRadius:8, cursor:'pointer', fontSize:20, lineHeight:1 }}>✕</button>
-          </div>
-
-          {/* Body preview */}
-          <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', overflow:'auto', padding:24 }} onClick={e=>e.stopPropagation()}>
-            {previewLoad ? (
-              <div style={{ color:'#fff', textAlign:'center' }}>
-                <div style={{ fontSize:48 }}>⏳</div>
-                <p style={{ marginTop:12, color:'#aaa' }}>Memuat preview...</p>
-              </div>
-            ) : preview.type === 'image' ? (
-              <img src={preview.url} alt={preview.file.name}
-                style={{ maxWidth:'100%', maxHeight:'80vh', borderRadius:8, boxShadow:'0 8px 40px rgba(0,0,0,0.5)', objectFit:'contain' }} />
-            ) : preview.type === 'pdf' ? (
-              <iframe src={preview.url} title="PDF Preview"
-                style={{ width:'min(900px,96vw)', height:'82vh', border:'none', borderRadius:8 }} />
-            ) : preview.type === 'video' ? (
-              <video controls autoPlay src={preview.url}
-                style={{ maxWidth:'96vw', maxHeight:'80vh', borderRadius:8, boxShadow:'0 8px 40px rgba(0,0,0,0.5)' }} />
-            ) : preview.type === 'audio' ? (
-              <div style={{ textAlign:'center', color:'#fff' }}>
-                <div style={{ fontSize:64, marginBottom:16 }}>🎵</div>
-                <p style={{ fontWeight:700, marginBottom:16 }}>{baseName(preview.file.name)}</p>
-                <audio controls autoPlay src={preview.url} style={{ width:340 }} />
-              </div>
-            ) : preview.type === 'office' ? (
-              <div style={{ textAlign:'center', color:'#fff', maxWidth:440 }}>
-                <div style={{ fontSize:64, marginBottom:16 }}>{fileIcon(baseName(preview.file.name))}</div>
-                <p style={{ fontWeight:700, fontSize:18, marginBottom:8 }}>{baseName(preview.file.name)}</p>
-                <p style={{ color:'#aaa', fontSize:13, marginBottom:20 }}>File Office tidak dapat dipreview langsung. Unduh untuk membuka.</p>
-                <button onClick={()=>downloadFile(preview.file)} style={{ background:'#e8a020', color:'#fff', border:'none', padding:'12px 28px', borderRadius:8, fontWeight:700, cursor:'pointer', fontSize:15 }}>⬇️ Unduh File</button>
-              </div>
-            ) : (
-              <div style={{ textAlign:'center', color:'#fff', maxWidth:380 }}>
-                <div style={{ fontSize:64, marginBottom:16 }}>{fileIcon(baseName(preview.file.name))}</div>
-                <p style={{ fontWeight:700, fontSize:18, marginBottom:8 }}>{baseName(preview.file.name)}</p>
-                <p style={{ color:'#aaa', fontSize:13, marginBottom:20 }}>Format ini tidak didukung untuk preview.</p>
-                <button onClick={()=>downloadFile(preview.file)} style={{ background:'#e8a020', color:'#fff', border:'none', padding:'12px 28px', borderRadius:8, fontWeight:700, cursor:'pointer', fontSize:15 }}>⬇️ Unduh File</button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Modal Upload */}
       {uploadModal && (
@@ -826,14 +626,11 @@ export default function App() {
             <div onClick={()=>fileRef.current.click()}
               onDragOver={e=>{e.preventDefault();setIsDragging(true)}} onDragLeave={()=>setIsDragging(false)}
               onDrop={e=>{e.preventDefault();setIsDragging(false);uploadFiles(e.dataTransfer.files,uploadCat)}}
-              style={{ width:'100%', border:`2px dashed ${isDragging?'#2d7a3a':'#c5d4c5'}`, borderRadius:10, padding:'32px 20px', cursor:'pointer', marginBottom:12, background:'#f9fbf9', textAlign:'center', boxSizing:'border-box' }}>
+              style={{ width:'100%', border:`2px dashed ${isDragging?'#2d7a3a':'#c5d4c5'}`, borderRadius:10, padding:'32px 20px', cursor:'pointer', marginBottom:20, background:'#f9fbf9', textAlign:'center', boxSizing:'border-box' }}>
               <span style={{ fontSize:36 }}>☁️</span>
               <p style={{ color:'#4a7c59', fontWeight:500, margin:'8px 0 4px' }}>Seret file ke sini atau klik untuk memilih</p>
               <p style={{ color:'#888', fontSize:12 }}>PDF, DOCX, XLSX, PPT, gambar, dan lainnya</p>
             </div>
-            <button onClick={()=>folderRef.current.click()} style={{ width:'100%', background:'#f0f5f0', border:'1.5px dashed #4a7c59', color:'#2d5a3d', borderRadius:10, padding:'14px', cursor:'pointer', fontWeight:600, fontSize:14, marginBottom:20 }}>
-              📁 Upload Seluruh Folder
-            </button>
             <button onClick={()=>setUploadModal(false)} style={{ background:'#f0f5f0', color:'#333', border:'none', padding:'12px 24px', borderRadius:8, cursor:'pointer', fontWeight:600, fontSize:14 }}>Batal</button>
           </div>
         </div>
@@ -845,7 +642,7 @@ export default function App() {
           <div style={{ background:'#fff', borderRadius:16, padding:32, maxWidth:400, width:'100%', textAlign:'center' }} onClick={e=>e.stopPropagation()}>
             <span style={{ fontSize:40 }}>🗑️</span>
             <h2 style={{ fontSize:20, fontWeight:800, color:'#1a2e1d', margin:'12px 0 8px' }}>Hapus Dokumen?</h2>
-            <p style={{ color:'#555', margin:'0 0 20px', fontSize:14 }}>File <strong>"{baseName(delConfirm.name)}"</strong> akan dihapus permanen.</p>
+            <p style={{ color:'#555', margin:'0 0 20px', fontSize:14 }}>File <strong>"{delConfirm.name}"</strong> akan dihapus permanen.</p>
             <div style={{ display:'flex', gap:10 }}>
               <button onClick={()=>deleteFile(delConfirm.id)} style={{ flex:1, background:'#c0392b', color:'#fff', border:'none', padding:12, borderRadius:8, fontWeight:700, cursor:'pointer' }}>Ya, Hapus</button>
               <button onClick={()=>setDelConfirm(null)} style={{ flex:1, background:'#f0f5f0', border:'none', padding:12, borderRadius:8, fontWeight:600, cursor:'pointer' }}>Batal</button>
