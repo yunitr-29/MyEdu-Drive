@@ -638,37 +638,21 @@ export default function App() {
             <span style={{ color:'#a8d5b5', fontSize:11 }}>▼</span>
           </button>
           {userMenu && (
-  <div className="absolute right-0 top-[calc(100%+8px)] bg-white rounded-xl shadow-xl border border-[#e0e8e0] min-w-[220px] z-50 overflow-hidden">
-    {/* User Info Section */}
-    <div className="flex items-center gap-3 p-4">
-      <span className="text-2xl">{currentUser?.avatar || '👤'}</span>
-      <div>
-        <p className="m-0 font-bold text-[#1a2e1d] text-sm">{currentUser?.name}</p>
-        <p className="m-0 text-gray-500 text-xs">@{currentUser?.username} · {currentUser?.role}</p>
-      </div>
-    </div>
-    
-    <div className="h-px bg-[#e0e8e0]" />
-    
-    {/* Admin Actions */}
-    {currentUser?.role === 'Admin' && (
-      <button 
-        onClick={() => { setUserMenu(false); setPage('admin'); }} 
-        className="block w-full text-left p-3 bg-none border-none cursor-pointer text-sm text-[#2d5a3d] font-semibold hover:bg-gray-50"
-      >
-        👥 Kelola Pengguna
-      </button>
-    )}
-    
-    {/* Logout Button */}
-    <button 
-      onClick={handleLogout} 
-      className="block w-full text-left p-3 bg-none border-none cursor-pointer text-sm text-[#c0392b] font-semibold hover:bg-red-50"
-    >
-      🚪 Keluar dari Sistem
-    </button>
-  </div>
-)}
+            <div style={{ position:'absolute', right:0, top:'calc(100% + 8px)', background:'#fff', borderRadius:12, boxShadow:'0 8px 32px rgba(0,0,0,0.15)', border:'1px solid #e0e8e0', minWidth:220, zIndex:100, overflow:'hidden' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:12, padding:16 }}>
+                <span style={{ fontSize:28 }}>{currentUser?.avatar||'👤'}</span>
+                <div>
+                  <p style={{ margin:0, fontWeight:700, color:'#1a2e1d', fontSize:14 }}>{currentUser?.name}</p>
+                  <p style={{ margin:0, color:'#666', fontSize:12 }}>@{currentUser?.username} · {currentUser?.role}</p>
+                </div>
+              </div>
+              <div style={{ height:1, background:'#e0e8e0' }}/>
+              {currentUser?.role==='Admin' && <button onClick={()=>{setUserMenu(false);setPage('admin')}} style={{ display:'block', width:'100%', padding:'12px 16px', background:'none', border:'none', textAlign:'left', cursor:'pointer', fontSize:14, color:'#2d5a3d', fontWeight:600 }}>👥 Kelola Pengguna</button>}
+              <button onClick={handleLogout} style={{ display:'block', width:'100%', padding:'12px 16px', background:'none', border:'none', textAlign:'left', cursor:'pointer', fontSize:14, color:'#c0392b', fontWeight:600 }}>🚪 Keluar dari Sistem</button>
+            </div>
+          )}
+        </div>
+      </header>
 
       <div style={{ display:'flex', minHeight:'calc(100vh - 60px)' }}>
         {/* Sidebar */}
