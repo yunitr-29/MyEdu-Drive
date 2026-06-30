@@ -445,10 +445,11 @@ export default function App() {
   }, [])
 
   // ── Fetch Folders ──
-  const fetchFolders = useCallback(async (parentId) => {
-    const query = supabase.from('folders').select('*').order('name')
-    if (parentId) query.eq('parent_id', parentId)
-    else query.is('parent_id', null)
+  const fetchFolders = useCallback(async (parentId, cat) => {
+    let query = supabase.from('folders').select('*').order('name')
+    if (parentId) query = query.eq('parent_id', parentId)
+    else query = query.is('parent_id', null)
+    if (cat && cat !== 'all') query = query.eq('category', cat)
     const { data } = await query
     setFolders(data||[])
   }, [])
@@ -467,7 +468,7 @@ export default function App() {
 
   useEffect(() => {
     if (page==='drive') {
-      fetchFolders(currentFolder)
+      fetchFolders(currentFolder, activeCat)
       fetchFiles(currentFolder, activeCat)
     }
   }, [page, currentFolder, activeCat, fetchFolders, fetchFiles])
@@ -493,15 +494,16 @@ export default function App() {
 
   // ── Buat Folder ──
   const createFolder = async (name, parentId, parentPath) => {
+    if (activeCat === 'all') throw new Error('Pilih kategori dulu di sidebar kiri sebelum membuat folder.')
     const path = parentPath ? `${parentPath}/${name}` : name
     const { error } = await supabase.from('folders').insert({
-      name, parent_id: parentId || null, path,
+      name, parent_id: parentId || null, path, category: activeCat,
       created_by: currentUser?.id, created_by_name: currentUser?.name
     })
     if (error) throw new Error(error.message)
     showToast(`Folder "${name}" berhasil dibuat!`)
     setFolderModal(false)
-    await fetchFolders(currentFolder)
+    await fetchFolders(currentFolder, activeCat)
   }
 
   // ── Hapus Folder ──
@@ -509,7 +511,7 @@ export default function App() {
     await supabase.from('folders').delete().eq('id', folder.id)
     setDelFolder(null)
     showToast(`Folder "${folder.name}" dihapus.`, 'info')
-    await fetchFolders(currentFolder)
+    await fetchFolders(currentFolder, activeCat)
   }
 
   // ── Upload File ──
@@ -621,7 +623,9 @@ export default function App() {
           {currentUser?.role==='Admin' && (
             <button onClick={()=>setPage('admin')} style={{ background:'transparent', border:'1px solid #a8d5b5', color:'#a8d5b5', padding:'7px 14px', borderRadius:6, cursor:'pointer', fontSize:13, fontWeight:500 }}>👥 Kelola Pengguna</button>
           )}
-          <button onClick={()=>setFolderModal(true)} style={{ background:'transparent', border:'1px solid #a8d5b5', color:'#a8d5b5', padding:'7px 14px', borderRadius:6, cursor:'pointer', fontSize:13, fontWeight:500 }}>📁 Folder Baru</button>
+          <button onClick={()=>{ if(activeCat==='all'){ showToast('Pilih kategori dulu di sidebar sebelum membuat folder.','info'); return } setFolderModal(true) }}
+            style={{ background:'transparent', border:'1px solid #a8d5b5', color:'#a8d5b5', padding:'7px 14px', borderRadius:6, cursor:'pointer', fontSize:13, fontWeight:500, opacity: activeCat==='all'?0.5:1 }}
+            title={activeCat==='all' ? 'Pilih kategori dulu untuk membuat folder' : 'Buat folder baru'}>📁 Folder Baru</button>
           <button onClick={()=>setUploadModal(true)} style={{ background:'#e8a020', color:'#fff', border:'none', padding:'8px 18px', borderRadius:8, fontWeight:600, cursor:'pointer', fontSize:14 }}>⬆️ Unggah File</button>
         </div>
         <div style={{ position:'relative' }}>
@@ -710,6 +714,7 @@ export default function App() {
           <p style={{ fontSize:12, color:'#888', marginBottom:12 }}>
             {folders.filter(f=>f.name.toLowerCase().includes(search.toLowerCase())).length} folder · {filtered.length} dokumen
             {currentPath && ` · 📁 ${currentPath}`}
+            {activeCat==='all' && ' · 💡 Pilih kategori di sidebar untuk melihat & membuat folder'}
           </p>
 
           {/* Grid/List Folders + Files */}
