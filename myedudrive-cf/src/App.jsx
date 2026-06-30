@@ -611,7 +611,7 @@ export default function App() {
     <div style={{ fontFamily:"'Segoe UI',system-ui,sans-serif", minHeight:'100vh', background:'#f5f7f5' }}>
       {toast&&<Toast {...toast}/>}
       {previewFile && <PreviewModal file={previewFile} onClose={()=>setPreviewFile(null)} />}
-      {userMenu&&<div style={{ position:'fixed', inset:0, zIndex:99 }} onClick={()=>setUserMenu(false)}/>}
+      {userMenu&&<div style={{ position:'fixed', inset:0, zIndex:98 }} onClick={()=>setUserMenu(false)}/>}
 
       {/* Topbar */}
       <header style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 24px', height:60, background:'#1a3d25', boxShadow:'0 2px 8px rgba(0,0,0,0.2)', gap:12, position:'sticky', top:0, zIndex:50 }}>
@@ -628,8 +628,8 @@ export default function App() {
             title={activeCat==='all' ? 'Pilih kategori dulu untuk membuat folder' : 'Buat folder baru'}>📁 Folder Baru</button>
           <button onClick={()=>setUploadModal(true)} style={{ background:'#e8a020', color:'#fff', border:'none', padding:'8px 18px', borderRadius:8, fontWeight:600, cursor:'pointer', fontSize:14 }}>⬆️ Unggah File</button>
         </div>
-        <div style={{ position:'relative' }}>
-          <button onClick={()=>setUserMenu(!userMenu)} style={{ display:'flex', alignItems:'center', gap:10, background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:10, padding:'7px 14px', cursor:'pointer' }}>
+        <div style={{ position:'relative', zIndex:101 }}>
+          <button onClick={()=>setUserMenu(!userMenu)} style={{ display:'flex', alignItems:'center', gap:10, background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:10, padding:'7px 14px', cursor:'pointer', position:'relative', zIndex:101 }}>
             <span style={{ fontSize:20 }}>{currentUser?.avatar||'👤'}</span>
             <div style={{ textAlign:'left' }}>
               <div style={{ fontSize:13, fontWeight:700, color:'#fff' }}>{currentUser?.name}</div>
@@ -638,7 +638,7 @@ export default function App() {
             <span style={{ color:'#a8d5b5', fontSize:11 }}>▼</span>
           </button>
           {userMenu && (
-            <div style={{ position:'absolute', right:0, top:'calc(100% + 8px)', background:'#fff', borderRadius:12, boxShadow:'0 8px 32px rgba(0,0,0,0.15)', border:'1px solid #e0e8e0', minWidth:220, zIndex:100, overflow:'hidden' }}>
+            <div style={{ position:'absolute', right:0, top:'calc(100% + 8px)', background:'#fff', borderRadius:12, boxShadow:'0 8px 32px rgba(0,0,0,0.15)', border:'1px solid #e0e8e0', minWidth:220, zIndex:101, overflow:'hidden' }}>
               <div style={{ display:'flex', alignItems:'center', gap:12, padding:16 }}>
                 <span style={{ fontSize:28 }}>{currentUser?.avatar||'👤'}</span>
                 <div>
@@ -647,8 +647,16 @@ export default function App() {
                 </div>
               </div>
               <div style={{ height:1, background:'#e0e8e0' }}/>
-              {currentUser?.role==='Admin' && <button onClick={()=>{setUserMenu(false);setPage('admin')}} style={{ display:'block', width:'100%', padding:'12px 16px', background:'none', border:'none', textAlign:'left', cursor:'pointer', fontSize:14, color:'#2d5a3d', fontWeight:600 }}>👥 Kelola Pengguna</button>}
-              <button onClick={handleLogout} style={{ display:'block', width:'100%', padding:'12px 16px', background:'none', border:'none', textAlign:'left', cursor:'pointer', fontSize:14, color:'#c0392b', fontWeight:600 }}>🚪 Keluar dari Sistem</button>
+              {currentUser?.role==='Admin' && (
+                <button type="button" onClick={(e)=>{e.stopPropagation();setUserMenu(false);setPage('admin')}}
+                  style={{ display:'block', width:'100%', padding:'12px 16px', background:'none', border:'none', textAlign:'left', cursor:'pointer', fontSize:14, color:'#2d5a3d', fontWeight:600, position:'relative', zIndex:102 }}>
+                  👥 Kelola Pengguna
+                </button>
+              )}
+              <button type="button" onClick={(e)=>{e.stopPropagation();handleLogout()}}
+                style={{ display:'block', width:'100%', padding:'12px 16px', background:'none', border:'none', textAlign:'left', cursor:'pointer', fontSize:14, color:'#c0392b', fontWeight:600, position:'relative', zIndex:102 }}>
+                🚪 Keluar dari Sistem
+              </button>
             </div>
           )}
         </div>
