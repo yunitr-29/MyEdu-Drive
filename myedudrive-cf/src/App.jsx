@@ -426,6 +426,19 @@ export default function App() {
   const [viewMode,     setViewMode]    = useState('list')
   const [toast,        setToast]       = useState(null)
   const [userMenu,     setUserMenu]    = useState(false)
+  const userMenuRef = useRef(null)
+
+  // Tutup menu user saat klik di luar area menu (lebih andal daripada overlay)
+  useEffect(() => {
+    if (!userMenu) return
+    const handleClickOutside = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setUserMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [userMenu])
   const fileRef = useRef()
 
   const showToast = useCallback((msg, type='success') => { setToast({msg,type}); setTimeout(()=>setToast(null),3000) }, [])
@@ -611,7 +624,7 @@ export default function App() {
     <div style={{ fontFamily:"'Segoe UI',system-ui,sans-serif", minHeight:'100vh', background:'#f5f7f5' }}>
       {toast&&<Toast {...toast}/>}
       {previewFile && <PreviewModal file={previewFile} onClose={()=>setPreviewFile(null)} />}
-      {userMenu&&<div style={{ position:'fixed', inset:0, zIndex:98 }} onClick={()=>setUserMenu(false)}/>}
+      {/* Overlay lama dihapus - sekarang pakai click-outside detection via ref */}
 
       {/* Topbar */}
       <header style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 24px', height:60, background:'#1a3d25', boxShadow:'0 2px 8px rgba(0,0,0,0.2)', gap:12, position:'sticky', top:0, zIndex:50 }}>
@@ -628,7 +641,7 @@ export default function App() {
             title={activeCat==='all' ? 'Pilih kategori dulu untuk membuat folder' : 'Buat folder baru'}>📁 Folder Baru</button>
           <button onClick={()=>setUploadModal(true)} style={{ background:'#e8a020', color:'#fff', border:'none', padding:'8px 18px', borderRadius:8, fontWeight:600, cursor:'pointer', fontSize:14 }}>⬆️ Unggah File</button>
         </div>
-        <div style={{ position:'relative', zIndex:101 }}>
+        <div ref={userMenuRef} style={{ position:'relative', zIndex:101 }}>
           <button onClick={()=>setUserMenu(!userMenu)} style={{ display:'flex', alignItems:'center', gap:10, background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:10, padding:'7px 14px', cursor:'pointer', position:'relative', zIndex:101 }}>
             <span style={{ fontSize:20 }}>{currentUser?.avatar||'👤'}</span>
             <div style={{ textAlign:'left' }}>
